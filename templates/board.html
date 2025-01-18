@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>the board</title>
+  </head>
+  <body id="bd">
+    <div id="container">
+      <table id="BoardWrapper"></table>
+      <div id="SubmitBtn">Submit</div>
+      <h1 id="RetriesCount"></h1>
+    </div>
+  </body>
+</html>
+
+<script>
+  // getting the current state of the sudoku board aswell as the retries from local storage
+  let sudoku = JSON.parse(localStorage.getItem("currentBoard"));
+  let retries = parseInt(localStorage.getItem("retries"));
+  const SubmitBtn = document.getElementById("SubmitBtn");
+
+  const MAX_SDK_LEN = 9;
+  const SUBGRID_SIZE = 3;
+  const table = document.getElementById("BoardWrapper");
+  for (let i = 0; i < MAX_SDK_LEN; i++) {
+    let new_row = document.createElement("tr");
+    for (let j = 0; j < MAX_SDK_LEN; j++) {
+      let new_cell = document.createElement("td");
+      new_cell.textContent = sudoku[i][j];
+      new_cell.className = "sdkCell";
+      new_cell.setAttribute("rowIndex", i);
+      new_cell.setAttribute("colIndex", j);
+
+      if (i % SUBGRID_SIZE === 2) {
+        new_cell.style.borderBottom = "3px solid black";
+      } else {
+        new_cell.style.borderBottom = "1px solid black";
+      }
+      if (j % SUBGRID_SIZE === 2) {
+        new_cell.style.borderRight = "3px solid black";
+      } else {
+        new_cell.style.borderRight = "1px solid black";
+      }
+
+      new_cell.addEventListener("click", function handleK() {
+        const cell_row = new_cell.getAttribute("rowIndex");
+        const cell_col = new_cell.getAttribute("colIndex");
+
+        window.addEventListener("keydown", function handleKeydown(event) {
+          if (event.key >= "1" && event.key <= "9") {
+            sudoku[cell_row][cell_col] = event.key;
+            new_cell.textContent = event.key;
+            window.removeEventListener("keydown", handleKeydown);
+          }
+        });
+      });
+
+      new_row.appendChild(new_cell);
+    }
+    table.appendChild(new_row);
+  }
+
+  SubmitBtn.addEventListener("click", function sendSudoku() {
+    console.log(sudoku);
+    fetch("/validate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ current_board: sudoku, retries: retries }),
+    })
+      .then((res) => {
+        if (res.redirected) {
+          window.location.href = res.url;
+        } else {
+          return res.json();
+        }
+      })
+      .then((data) => {
+        if (data) {
+          // If there are retries left, update the display
+          retries = data.retries;
+          const bd = document.getElementById("bd");
+          const existing_red_text = document.getElementById("warningText");
+          if (existing_red_text != null) {
+            existing_red_text.remove();
+          }
+          const red_text = document.createElement("h2");
+          red_text.style.color = "#ff4500";
+          red_text.textContent = "Retries left: " + retries;
+          red_text.id = "warningText";
+          bd.appendChild(red_text);
+        }
+      })
+      .catch((error) => {
+        console.error("Error sending current board back to the server:", error);
+      });
+  });
+</script>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+  }
+
+  #container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+  }
+
+  .sdkCell {
+    width: 50px;
+    height: 50px;
+    font-size: 30px;
+    font-weight: bold;
+    background-color: #f0f8ff;
+    text-align: center;
+    transition: all 0.3s ease;
+    user-select: none;
+  }
+  .sdkCell:hover {
+    background-color: #ccd8e2;
+  }
+  #BoardWrapper {
+    border: 3px black solid;
+    border-collapse: collapse;
+    user-select: none;
+  }
+  #SubmitBtn {
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 10px;
+    height: 35px;
+    width: 150px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    text-align: center;
+    transition: background-color 0.3s ease;
+  }
+
+  #SubmitBtn:hover {
+    background-color: #0056b3;
+  }
+
+  #warningText {
+    position: absolute;
+    color: #ff4500;
+    bottom: 100px;
+  }
+</style>
