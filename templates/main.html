@@ -9,6 +9,10 @@
     <h1>Welcome to Sudoku Game</h1>
     <form id="sudokuForm">
       <label for="clueCount">Number of clues:</label>
+      <!--
+        input for entering the number of clues we have to keep the number of clues above 17 to ensure atleast 1 unique solution
+        we also have to keep the nubmer limit upt o 81 because a sudoku only have 81 cells
+      -->
       <input
         type="number"
         id="clueCount"
@@ -17,35 +21,58 @@
         required
         placeholder="Enter clues (17-81)"
       />
+      <!--
+        paragraph to display any error message and a submit button for generating the sudoku
+      -->
       <button type="submit" id="generateSudoku">Generate Sudoku</button>
       <p>created by Andrew nguyen</p>
+      <p id="errorMessage"></p>
     </form>
   </body>
 </html>
-
 <script>
-  const sudokuForm = document.getElementById("sudokuForm");
-  sudokuForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const clueCount = document.getElementById("clueCount").value;
-    fetch("/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ clueCount: parseInt(clueCount) }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
+// get the form
+const sudokuForm = document.getElementById("sudokuForm");
+// add a event listener to the form with the event of submit
+sudokuForm.addEventListener("submit", (event) => {
+  // prevent default so you can't just submit the form normaly 
+  event.preventDefault();
+  // get the clue counts from the form
+  const clueCount = document.getElementById("clueCount").value;
+  // send a request of post to generate to get the board witht he clue counts the user submit
+  fetch("/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ clueCount: parseInt(clueCount) }),
+  })
+    // get the data back
+    .then((res) => res.json())
+    .then((data) => {
+      // if the boarddata we get back is Unsolvable then we get the error message and set it to
+      if (data.unsolved_board === "Unsolvable") {
+        const error_message = document.getElementById("errorMessage");
+        // set the error message to error generating board
+        error_message.textContent = "Error board generating went wrong please try regenerating board again";
+      } else { // otherwise if the board is not unsolvable
+        // set the current board to local storage because we are going to use the current board in another html file
         localStorage.setItem(
           "currentBoard",
-          JSON.stringify(data.unsolved_board)
+          JSON.stringify(data.unsolved_board) // we have to stringify the data since unsolved_board is an array
         );
+        // store the retries aswell
         localStorage.setItem("retries", data.retries);
+        // redirect to the board url
         window.location.href = "/board";
-      })
-      .catch((error) => console.error("Error generating Sudoku:", error));
-  });
+      }
+    })
+    // catach any other url and display it if there are any errors
+    .catch((error) => {
+      const error_message = document.getElementById("errorMessage");
+      error_message.textContent = error.message;
+    });
+});
 </script>
 
 <style>
@@ -85,5 +112,8 @@
   }
   #generateSudoku:hover {
     background-color: #0056b3;
+  }
+  #errorMessage {
+    background-color: "#dc3545";
   }
 </style>

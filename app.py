@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-from sudokuSolver import SudokuGenerator
+from sudokuSolver import SudokuGenerator, SudokuSolveError
 from typing import List
 
 app = Flask(__name__, template_folder="templates")
@@ -11,7 +11,7 @@ SDK_COL_SIZE: int = 9
 # the main route
 @app.route("/")
 def main():
-   return render_template("main.html")
+    return render_template("main.html")
 
 # function for creating a new board when a button is clicked
 @app.route("/generate", methods=["POST"])
@@ -22,10 +22,12 @@ def generateSudoku():
     # generate the sudokus
     sdk = SudokuGenerator()
     # get the solution and the unsolved board itself
-    solution, unsolved_board = sdk.generateSudoku(clue_counts, clue_counts)
-    # return a response of the unsolved board and the default number of retries
-    return jsonify({"unsolved_board": unsolved_board, "retries": 3})
-
+    try:
+        # if we can solved the sudoku board then we are good
+        solution, unsolved_board = sdk.generateSudoku(clue_counts, clue_counts)
+        return jsonify({"unsolved_board": unsolved_board, "retries": 3})
+    except SudokuSolveError as e:
+        return jsonify({"unsolved_board": "Unsolvable", "retries": 0})
 
 # function for rendering the board
 @app.route('/board')
@@ -41,8 +43,10 @@ def validate_sudoku():
     current_board = data["current_board"]
     retries = data["retries"]
     # check if the current board matches the solution
+    # iterate until SDKROWSIZE and SDKCOLSIZE because our sudoku dont change throughout so we do not always need to get the size of the board
     for i in range(SDK_ROW_SIZE):
         for j in range(SDK_COL_SIZE):
+            # check if the boad is incomplete or the cell doesnot match with the answers
             if solution[i][j] != current_board[i][j] or current_board[i][j] == ' ':
                 if retries - 1 == 0:
                     # if the user failed redirect to failed page
@@ -65,6 +69,7 @@ def failed():
 def success():
     return render_template("success.html")
 
+# function to run app with python3 app.py
 if __name__ == '__main__':
     app.run(debug=True)
 

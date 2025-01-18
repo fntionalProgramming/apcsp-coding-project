@@ -7,98 +7,139 @@
   </head>
   <body id="bd">
     <div id="container">
+      <!--
+        board wraper for displaying the sudoku
+        submit button for submiting the result of the board
+        retries board for displaying the retries
+      -->
       <table id="BoardWrapper"></table>
       <div id="SubmitBtn">Submit</div>
       <h1 id="RetriesCount"></h1>
     </div>
+    <!--
+      display the error message if there is any
+    -->
+    <p id="errorMessage"></p>
   </body>
 </html>
-
 <script>
-  // getting the current state of the sudoku board aswell as the retries from local storage
-  let sudoku = JSON.parse(localStorage.getItem("currentBoard"));
-  let retries = parseInt(localStorage.getItem("retries"));
-  const SubmitBtn = document.getElementById("SubmitBtn");
+// getting the current state of the sudoku board aswell as the retries from local storage we just set earlier
+let sudoku = JSON.parse(localStorage.getItem("currentBoard"));
+let retries = parseInt(localStorage.getItem("retries"));
+const SubmitBtn = document.getElementById("SubmitBtn");
+// get the board wrapper which will be used to display the sudokus
+const table = document.getElementById("BoardWrapper");
+const MAX_SDK_LEN = 9;
+const SUBGRID_SIZE = 3;
 
-  const MAX_SDK_LEN = 9;
-  const SUBGRID_SIZE = 3;
-  const table = document.getElementById("BoardWrapper");
-  for (let i = 0; i < MAX_SDK_LEN; i++) {
-    let new_row = document.createElement("tr");
-    for (let j = 0; j < MAX_SDK_LEN; j++) {
-      let new_cell = document.createElement("td");
-      new_cell.textContent = sudoku[i][j];
-      new_cell.className = "sdkCell";
-      new_cell.setAttribute("rowIndex", i);
-      new_cell.setAttribute("colIndex", j);
-
-      if (i % SUBGRID_SIZE === 2) {
-        new_cell.style.borderBottom = "3px solid black";
-      } else {
-        new_cell.style.borderBottom = "1px solid black";
-      }
-      if (j % SUBGRID_SIZE === 2) {
-        new_cell.style.borderRight = "3px solid black";
-      } else {
-        new_cell.style.borderRight = "1px solid black";
-      }
-
-      new_cell.addEventListener("click", function handleK() {
-        const cell_row = new_cell.getAttribute("rowIndex");
-        const cell_col = new_cell.getAttribute("colIndex");
-
-        window.addEventListener("keydown", function handleKeydown(event) {
-          if (event.key >= "1" && event.key <= "9") {
+// iterate over the entiore matrix
+// iterate over the every row at start of the sudoku
+for (let i = 0; i < MAX_SDK_LEN; i++) {
+  // create a new row elemenet
+  let new_row = document.createElement("tr");
+  // iterate each element in the sudoku
+  for (let j = 0; j < MAX_SDK_LEN; j++) {
+    // create a newcell
+    let new_cell = document.createElement("td");
+    // set the value of the current cell to the index at row and col of sudoku
+    new_cell.textContent = sudoku[i][j];
+    // set the class name to sdkCell for styling 
+    new_cell.className = "sdkCell";
+    // set the attribute of row and column index
+    new_cell.setAttribute("rowIndex", i);
+    new_cell.setAttribute("colIndex", j);
+    // this check is workt he same way has how the __doable function in sudokusolver module work
+    if (i % SUBGRID_SIZE === 2) {
+      new_cell.style.borderBottom = "3px solid black";
+    } else {
+      new_cell.style.borderBottom = "1px solid black";
+    }
+    if (j % SUBGRID_SIZE === 2) {
+      new_cell.style.borderRight = "3px solid black";
+    } else {
+      new_cell.style.borderRight = "1px solid black";
+    }
+    // add click event
+    new_cell.addEventListener("click", () => {
+      // get the cell clicked on index by getting its attribute setted earlier 
+      const cell_row = new_cell.getAttribute("rowIndex");
+      const cell_col = new_cell.getAttribute("colIndex");
+      // temporarility asign a window event of keydown  to check if the user enter something
+      window.addEventListener("keydown", function handleKeydown(event) {
+        // check if the nubmer the user enter is a valid sudoku number or a backspace which means the user want to clear that number 
+        if ((event.key >= "1" && event.key <= "9") || event.key === 'Backspace') {
+          // delete the value of the current cell is the key entered is backspace
+          // else set the current cell to the value the user entered
+          if (event.key == 'Backspace') { 
+            sudoku[cell_row][cell_col] = " ";
+            new_cell.textContent = " "
+          } else {
             sudoku[cell_row][cell_col] = event.key;
             new_cell.textContent = event.key;
-            window.removeEventListener("keydown", handleKeydown);
           }
-        });
+          // delete the current window event
+          window.removeEventListener("keydown", handleKeydown);
+        }
       });
-
-      new_row.appendChild(new_cell);
-    }
-    table.appendChild(new_row);
+    });
+    // append the current cell to the row
+    new_row.appendChild(new_cell);
   }
+  // append the current row to the sudoku board
+  table.appendChild(new_row);
+}
 
-  SubmitBtn.addEventListener("click", function sendSudoku() {
-    console.log(sudoku);
-    fetch("/validate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ current_board: sudoku, retries: retries }),
+// add a eventlistener to tyhe submit button
+SubmitBtn.addEventListener("click", () => {
+  // send a post request to the validate endpoint to check if the board is valid or not
+  // the reason we check the board in the backroom is for safety and to ensure that the user cant just user javascript on the browser to get the solution or reconstruct it
+  fetch("/validate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    // send to the backend the current board and the number of retries
+    body: JSON.stringify({ current_board: sudoku, retries: retries }),
+  })
+    // if the backend return a redirect which mean that the current user either won or lose the game redirect the user to that url
+    // other wise if it is not a redirection we just get our data as json
+    .then((res) => {
+      if (res.redirected) {
+        window.location.href = res.url;
+      } else {
+        return res.json();
+      }
     })
-      .then((res) => {
-        if (res.redirected) {
-          window.location.href = res.url;
-        } else {
-          return res.json();
-        }
-      })
-      .then((data) => {
-        if (data) {
-          // If there are retries left, update the display
-          retries = data.retries;
-          const bd = document.getElementById("bd");
-          const existing_red_text = document.getElementById("warningText");
-          if (existing_red_text != null) {
-            existing_red_text.remove();
-          }
-          const red_text = document.createElement("h2");
-          red_text.style.color = "#ff4500";
-          red_text.textContent = "Retries left: " + retries;
-          red_text.id = "warningText";
-          bd.appendChild(red_text);
-        }
-      })
-      .catch((error) => {
-        console.error("Error sending current board back to the server:", error);
-      });
-  });
-</script>
+    // proccess the data
+    .then((data) => {
+      // get the retires fromt data recieved
+      retries = data.retries;
+      // get ehe element bordy
+      const bd = document.getElementById("bd");
+      // check if there is already a error message
+      const existing_red_text = document.getElementById("warningText");
+      // if there already the text for displaying retries then delete it
+      if (existing_red_text != null) {
+        existing_red_text.remove();
+      }
+      // create a new text for displaying retries
+      const red_text = document.createElement("h2");
+      // set the id to wraning text so the style will be loaded
+      red_text.id = "warningText";
+      // display the retries
+      red_text.textContent = "Retries left: " + retries;
+      // append the retrie text to the body 
+      bd.appendChild(red_text);
+    })
+    // catch any error
+    .catch((error) => {
+      // print the error 
+      console.error("Error sending current board back to the server:", error);
+      // display the error
+    });
+});
 
+</script>
 <style>
   body {
     margin: 0;
@@ -108,7 +149,6 @@
     align-items: center;
     background-color: #f0f0f0;
   }
-
   #container {
     display: flex;
     flex-direction: column;
@@ -116,7 +156,6 @@
     gap: 20px;
     position: relative;
   }
-
   .sdkCell {
     width: 50px;
     height: 50px;
@@ -136,7 +175,6 @@
     user-select: none;
   }
   #SubmitBtn {
-    border: 2px solid black;
     border-radius: 5px;
     padding: 10px;
     height: 35px;
@@ -152,14 +190,15 @@
     text-align: center;
     transition: background-color 0.3s ease;
   }
-
   #SubmitBtn:hover {
     background-color: #0056b3;
   }
-
   #warningText {
     position: absolute;
     color: #ff4500;
     bottom: 100px;
+  }
+  #errorMessage {
+    background-color: "#dc3545";
   }
 </style>
