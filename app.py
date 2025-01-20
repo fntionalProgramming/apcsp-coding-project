@@ -1,19 +1,27 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-from sudokuSolver import SudokuGenerator, SudokuSolveError
-from typing import List
+from flask import Flask, render_template, request, jsonify, redirect, url_for # import nesscessary functions
+from sudokuSolver import SudokuGenerator, SudokuSolveError # import the sudoku generator and the error type
 
+'''
+    flask backend to to stuff like rendering pages and validate the sudoku
+'''
+# init flask application
 app = Flask(__name__, template_folder="templates")
-# storing the current solution
+# storing the curretn solution
 solution: List[List[str]]= [[None]]
+# some constant for the size of the board because it wont be changing
 SDK_ROW_SIZE: int = 9
 SDK_COL_SIZE: int = 9
 
-# the main route
+'''
+    function for rending the main page
+'''
 @app.route("/")
 def main():
     return render_template("main.html")
 
-# function for creating a new board when a button is clicked
+'''
+    end point for generating the board
+'''
 @app.route("/generate", methods=["POST"])
 def generateSudoku():
     global solution
@@ -29,13 +37,17 @@ def generateSudoku():
     except SudokuSolveError as e:
         return jsonify({"unsolved_board": "Unsolvable", "retries": 0})
 
-# function for rendering the board
+'''
+    route for rendering the board layout from board.html
+'''
 @app.route('/board')
 def board():
     return render_template("board.html")
 
 
-# function for validating the board
+'''
+    end point for validating the current board which will b sent from the front end
+'''
 @app.route("/validate", methods=["POST"])
 def validate_sudoku():
     # get the current board and the current retries that is sent from the client
@@ -59,19 +71,26 @@ def validate_sudoku():
     # redirect to success if we pass all check s
     return redirect(url_for("success"))
 
-# function for rendering the failed page
+'''
+    endpoint for rendering the lost screen from failed.html
+'''
 @app.route('/failed')
 def failed():
     return render_template("failed.html")
 
-# function for rending the win page
+'''
+    endpoint for rendering the win screen from succcess.html
+'''
 @app.route('/success')
 def success():
     return render_template("success.html")
 
-# function to run app with python3 app.py
+'''
+    maain function to run the app
+'''
 if __name__ == '__main__':
-    app.run(debug=True)
+    # run wit debug=True if only in development
+    app.run(debug=False)
 
 
 

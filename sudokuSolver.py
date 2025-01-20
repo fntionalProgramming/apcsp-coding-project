@@ -1,9 +1,26 @@
-from random import randint
-from copy import deepcopy
-import array
+from random import randint # for random number
+from copy import deepcopy # for making a deepcopy
+import array # for the array type 
 
+'''
+    module for generating the sudoku
+    example:
+    clues_lower_bound = 30
+    clues_upper_bound = 36
+    sdk = SudokuGenerator
+    try:
+        solved_board, unsolved_board = sdk.generateSudoku()
+    catch SudokuSolverError as e:
+        print(e)
+'''
+'''
+    exception class
+'''
 class SudokuSolveError(Exception):
-    def __init__(self, message="Error solving the Sudoku board"):
+    '''
+        function that initilize a error message
+    '''
+    def __init__(self, message):
         super().__init__(message)
 
 class SudokuGenerator:
@@ -62,9 +79,15 @@ class SudokuGenerator:
         return True
 
     # function for solving the sudoku
+    '''
+        function takes in a 9x9 board and solve the sudoku
+    '''
     def __solveSudoku(self, board: list[list[str]]) -> bool:
         sdks: list[str] = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
         # sub function for recursively solving the sudoku
+        '''
+            this is the actually function that uses backtracking to solve the sudoku
+        '''
         def solve(board: list[list[str]]) -> bool:
             # empty initilization and current row and column
             r = -1
@@ -97,8 +120,22 @@ class SudokuGenerator:
             return False
         # solve the board
         return solve(board)
-
+    '''
+        function follow the steps of generting sudoku board is this https://zhangroup.aporc.org/images/files/Paper_3485.pdf
+        the first step is to init a empty board
+        the second step is to sprinkle on some numbers which is 6 because statisticly generating a sudoku with 6 valid numbers
+        yield a near 100% of a solvable sudoku
+        the third step is to solve the spinkled board if it is not solvable raise an exception (which is really rare)
+        the last step is to punch some valid holes by checking if the board is solvable when punching a hole
+    '''
     def generateSudoku(self, clues_lower_bound: int, clues_upper_bound) -> tuple[list[list[str]]]:
+        # the reason we check for less than 17 because mathmatically is the minimum clues for a 
+        # sudoku to have atleast one solution
+        if clues_lower_bound < 17 or clues_upper_bound < 17:
+            raise SudokuSolveError("Clues must be atleast 17")
+        # sudoku only have 81 cells so we have to check are the clues smaller than 81 if not then raise an exception
+        if clues_lower_bound > 81 or clues_upper_bound > 81:
+            raise SudokuSolveError("Clues must be less than 81")
         counts: int = 6
         holes: int = randint(81-clues_upper_bound, 81-clues_lower_bound)
         # Start with an empty board using fixed-size array for rows and columns
@@ -135,7 +172,7 @@ class SudokuGenerator:
         # extremely rare because the possibility for sprinkiling 6 numbers and ensuring a working suduoku is near 100%, around 99.99999999%
         # but if there is a error generating the board we raise a exception
         if not self.__solveSudoku(board):
-            raise SudokuSolveError
+            raise SudokuSolveError("Error solving the Sudoku board")
         # make a deep copy, this wil be our solutions the reaso n we do a deep copy because python modify stuff by reference
         # so when we punch the holes the later on it wil modify the refernece and destroyed our solved board
         solved_board: list[list[str]] = deepcopy(board)
@@ -166,7 +203,9 @@ class SudokuGenerator:
             # skip the cell we already punch holes
         # return the solved board and the unsolved board
         return (solved_board, board)
-    # function for printing the board
+    '''
+        function for printing the board
+    '''
     def printBoard(self, board: list[list[str]]):
         for row in board:
             # print the board after a new end line
