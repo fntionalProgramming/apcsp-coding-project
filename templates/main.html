@@ -45,7 +45,7 @@ sudokuForm.addEventListener("submit", (event) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ clueCount: parseInt(clueCount) }),
+    body: `{ clueCount: ${clueCount} }`,
   })
     // get the data back
     .then((res) => res.json())
