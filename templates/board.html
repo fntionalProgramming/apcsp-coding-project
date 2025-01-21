@@ -106,12 +106,10 @@ function arrayToString(array) {
   for (let i = 0; i < array.length; i++) {
     // append the current number to string
     stringOutput += array[i];
-    // dont add a comma if it is not the last element beause if we dont have this check the array could end up some thing like this
-    // [1,2,3,] which is a error
-    if (i < array.length - 1) {
-      stringOutput += ","; 
-    }
+    stringOutput += ",";
   }
+  // delete the worthless comma t the end of every string
+  stringOutput.slice(0, -1)
   // add a final brace
   stringOutput += "]"
   // return the final string
@@ -122,15 +120,13 @@ function sudokuToString(sudoku) {
   let stringOutput = "["
   for (let i = 0; i < MAX_SDK_LEN; i++) {
     // get the string form of the current row using the array to string function
-    stringOutput += arrayToString(sudoku[i]);
-    // dont add a comma if it is not the last element beause if we dont have this check the array could end up some thing like this
-    // [1,2,3,] which is a error
-    if (i < sudoku.length - 1) {
-      stringOutput += ","; 
-    }
+    stringOutput += array[i];
+    stringOutput += ",";
   }
-  // add the final brace
-  stringOutput += ']'
+  // delete the worthless comma t the end of every string
+  stringOutput.slice(0, -1)
+  // add a final brace
+  stringOutput += "]"
   // return the string output
   return stringOutput
 }
