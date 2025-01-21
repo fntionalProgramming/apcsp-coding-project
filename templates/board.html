@@ -109,7 +109,7 @@ function arrayToString(array) {
     stringOutput += ",";
   }
   // delete the worthless comma t the end of every string
-  stringOutput.slice(0, -1)
+  stringOutput = stringOutput.slice(0, -1)
   // add a final brace
   stringOutput += "]"
   // return the final string
@@ -124,7 +124,7 @@ function sudokuToString(sudoku) {
     stringOutput += ",";
   }
   // delete the worthless comma t the end of every string
-  stringOutput.slice(0, -1)
+  stringOutput = stringOutput.slice(0, -1)
   // add a final brace
   stringOutput += "]"
   // return the string output
