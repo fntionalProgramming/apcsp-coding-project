@@ -135,6 +135,7 @@ SubmitBtn.addEventListener("click", () => {
   // send a post request to the validate endpoint to check if the board is valid or not
   // the reason we check the board in the backroom is for safety and to ensure that the user cant just user javascript on the browser to get the solution or reconstruct it
   /* we are actually sending a post request eventhough the name of this function is fetch */
+  console.log(sudokuToString(sudoku))
   fetch("/validate", {
     method: "POST",
     // send the content type as json string
