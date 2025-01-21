@@ -9,6 +9,8 @@
     <div id="container">
       <!--
         board wraper for displaying the sudoku
+          a sudoku board in this html is represented as
+          a table of rows (tr) of cells (td)
         submit button for submiting the result of the board
         retries board for displaying the retries
       -->
@@ -26,12 +28,16 @@
 // getting the current state of the sudoku board aswell as the retries from local storage we just set earlier
 let sudoku = JSON.parse(localStorage.getItem("currentBoard"));
 let retries = parseInt(localStorage.getItem("retries"));
+// we use getElementById because there is only one element so we dont have to worry about finding the elements from list if we getElementByClass instead
+// get the submit button
 const SubmitBtn = document.getElementById("SubmitBtn");
 // get the board wrapper which will be used to display the sudokus
 const table = document.getElementById("BoardWrapper");
+// the reason we can have a constant for a sudoku size because it wont be change
 const MAX_SDK_LEN = 9;
 const SUBGRID_SIZE = 3;
 
+/* code above basically render a sudoku and make it so that each cell is interactive which the user can change the number  */
 // iterate over the entiore matrix
 // iterate over the every row at start of the sudoku
 for (let i = 0; i < MAX_SDK_LEN; i++) {
@@ -48,7 +54,12 @@ for (let i = 0; i < MAX_SDK_LEN; i++) {
     // set the attribute of row and column index
     new_cell.setAttribute("rowIndex", i);
     new_cell.setAttribute("colIndex", j);
-    // this check is workt he same way has how the __doable function in sudokusolver module work
+    /* the modulo math is the same as in the __doable function but for now
+      this if check what it does basically it check for the furthest right cells of a subgrid then add a border to 
+      and the bottom most cells of a subgrid
+      otherwise if it is not a furthest rightmost cells and the bottom most cells of a subgrid
+      then we add a bordere but lighter to make distinction between each cells in a subgrid easier
+    */
     if (i % SUBGRID_SIZE === 2) {
       new_cell.style.borderBottom = "3px solid black";
     } else {
@@ -67,10 +78,11 @@ for (let i = 0; i < MAX_SDK_LEN; i++) {
       // temporarility asign a window event of keydown  to check if the user enter something
       window.addEventListener("keydown", function handleKeydown(event) {
         // check if the nubmer the user enter is a valid sudoku number or a backspace which means the user want to clear that number 
+        // i also uses triple equality to avoid uneccessary conversion that the double equal size will cause
         if ((event.key >= "1" && event.key <= "9") || event.key === 'Backspace') {
           // delete the value of the current cell is the key entered is backspace
           // else set the current cell to the value the user entered
-          if (event.key == 'Backspace') { 
+          if (event.key === 'Backspace') { 
             sudoku[cell_row][cell_col] = " ";
             new_cell.textContent = " "
           } else {
@@ -90,37 +102,51 @@ for (let i = 0; i < MAX_SDK_LEN; i++) {
 }
 /* functions for turning an arary array to  its string representation */
 function arrayToString(array) {
-  let stringOutput = "["
-  for (let i = 0; i < array.size(); i++) {
-    temp_string = ` ${array[i]},`
-    stringOutput += temp_string
+  let stringOutput = "[";
+  for (let i = 0; i < array.length; i++) {
+    // append the current number to string
+    stringOutput += array[i];
+    // dont add a comma if it is not the last element beause if we dont have this check the array could end up some thing like this
+    // [1,2,3,] which is a error
+    if (i < array.length - 1) {
+      stringOutput += ","; 
+    }
   }
-  stringOutput.slice(0, -1)
-  stringOutput += ']'
-  return stringOutput
+  // add a final brace
+  stringOutput += "]"
+  // return the final string
+  return stringOutput;
 }
 /* function basically the same as the arrayToString function */
 function sudokuToString(sudoku) {
   let stringOutput = "["
   for (let i = 0; i < MAX_SDK_LEN; i++) {
-    temp_string = ` ${arrayToString(sudoku[i])},`
-    stringOutput += temp_string
+    // get the string form of the current row using the array to string function
+    stringOutput += arrayToString(sudoku[i]);
+    // dont add a comma if it is not the last element beause if we dont have this check the array could end up some thing like this
+    // [1,2,3,] which is a error
+    if (i < sudoku.length - 1) {
+      stringOutput += ","; 
+    }
   }
-  stringOutput.slice(0, -1)
+  // add the final brace
   stringOutput += ']'
+  // return the string output
   return stringOutput
 }
 // add a eventlistener to tyhe submit button
 SubmitBtn.addEventListener("click", () => {
   // send a post request to the validate endpoint to check if the board is valid or not
   // the reason we check the board in the backroom is for safety and to ensure that the user cant just user javascript on the browser to get the solution or reconstruct it
+  /* we are actually sending a post request eventhough the name of this function is fetch */
   fetch("/validate", {
     method: "POST",
+    // send the content type as json string
     headers: {
       "Content-Type": "application/json",
     },
     // send to the backend the current board and the number of retries
-    body: `{ current_board: ${sudokuToString(sudoku)}, retries: ${toString(retries)} }`,
+    body: `{"current_board": ${sudokuToString(sudoku)}, "retries": ${retries.toString()}}`,
   })
     // if the backend return a redirect which mean that the current user either won or lose the game redirect the user to that url
     // other wise if it is not a redirection we just get our data as json
@@ -152,16 +178,22 @@ SubmitBtn.addEventListener("click", () => {
       // append the retrie text to the body 
       bd.appendChild(red_text);
     })
-    // catch any error
+    // catch clause for catching any error that could appear and displays it both in the console and the userinterface
     .catch((error) => {
-      // print the error 
-      console.error("Error sending current board back to the server:", error);
-      // display the error
+      const error_message = document.getElementById("errorMessage");
+      error_message.textContent = error.message;
+      // display the error in the console aswell
+      console.error(`Error: ${error}`)
     });
 });
 
 </script>
+
 <style>
+  /* 
+  style for the body to make the entire page centered, 
+  both horizontally and vertically, with a light background color
+  */
   body {
     margin: 0;
     height: 100vh;
@@ -170,6 +202,9 @@ SubmitBtn.addEventListener("click", () => {
     align-items: center;
     background-color: #f0f0f0;
   }
+  /* 
+  style for the main container that holds the Sudoku board and other elements
+  */
   #container {
     display: flex;
     flex-direction: column;
@@ -177,6 +212,10 @@ SubmitBtn.addEventListener("click", () => {
     gap: 20px;
     position: relative;
   }
+  /* 
+  style for each Sudoku cell in the board. 
+  each cell is square with a light background and bold text
+  */
   .sdkCell {
     width: 50px;
     height: 50px;
@@ -187,14 +226,26 @@ SubmitBtn.addEventListener("click", () => {
     transition: all 0.3s ease;
     user-select: none;
   }
+  /* 
+  add a hover effect for Sudoku cells to provide visual feedback
+  changes the background to a slightly darker blue when hovere
+  */
   .sdkCell:hover {
     background-color: #ccd8e2;
   }
+  /* 
+  style for the table (Sudoku board container). 
+  add a thick black border and removes gaps between cells
+  */
   #BoardWrapper {
     border: 3px black solid;
     border-collapse: collapse;
     user-select: none;
   }
+  /* 
+  style for the Submit button. 
+  make it look like a button with rounded corners and a blue background
+  */
   #SubmitBtn {
     border-radius: 5px;
     padding: 10px;
@@ -211,14 +262,24 @@ SubmitBtn.addEventListener("click", () => {
     text-align: center;
     transition: background-color 0.3s ease;
   }
+  /* 
+  hover effect for the Submit button. 
+  changes the background color to a darker blue when hovered
+  */
   #SubmitBtn:hover {
     background-color: #0056b3;
   }
+  /* 
+  style for the warning text that displays retries left. 
+  */
   #warningText {
     position: absolute;
     color: #ff4500;
     bottom: 100px;
   }
+  /* 
+  style for error messaeg, error message will dynamically apepar if there is one
+  */
   #errorMessage {
     background-color: "#dc3545";
   }

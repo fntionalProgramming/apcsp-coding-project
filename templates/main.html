@@ -6,7 +6,7 @@
     <title>Main page</title>
   </head>
   <body>
-    <h1>Welcome to Sudoku Game</h1>
+    <h1>Welcome to the Sudoku Game</h1>
     <form id="sudokuForm">
       <label for="clueCount">Number of clues:</label>
       <!--
@@ -45,7 +45,7 @@ sudokuForm.addEventListener("submit", (event) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: `{ clueCount: ${clueCount} }`,
+    body: `{"clueCount": ${clueCount}}`,
   })
     // get the data back
     .then((res) => res.json())
@@ -59,7 +59,7 @@ sudokuForm.addEventListener("submit", (event) => {
         // set the current board to local storage because we are going to use the current board in another html file
         localStorage.setItem(
           "currentBoard",
-          JSON.stringify(data.unsolved_board) // we have to stringify the data since unsolved_board is an array
+          JSON.stringify(data.unsolved_board) // we have to turn the function to string because it is a matrix
         );
         // store the retries aswell
         localStorage.setItem("retries", data.retries);
@@ -71,11 +71,17 @@ sudokuForm.addEventListener("submit", (event) => {
     .catch((error) => {
       const error_message = document.getElementById("errorMessage");
       error_message.textContent = error.message;
+      // display the error in the console aswell
+      console.error(`Error: ${error}`)
     });
 });
 </script>
 
 <style>
+  /* 
+  style for the body to make the entire page centered, 
+  both horizontally and vertically, with a light background color
+  */
   body {
     display: flex;
     flex-direction: column;
@@ -83,14 +89,23 @@ sudokuForm.addEventListener("submit", (event) => {
     justify-content: center;
     background-color: #f0f0f0;
   }
+  /*
+  style for heading1 text which is the title text "Welcome to the Sudoku Game"
+  */
   h1 {
     margin-top: 75px;
     font-size: 35px;
     margin-bottom: 50px;
   }
+  /*
+  change the font weight of the label to make it more pop
+  */
   label {
     font-weight: bold;
   }
+  /*
+  style for the input element clueCount, just make it look a bit nicer
+  */
   #clueCount {
     width: 100%;
     padding: 10px;
@@ -99,6 +114,9 @@ sudokuForm.addEventListener("submit", (event) => {
     margin-bottom: 20px;
     font-size: 15px;
   }
+  /*
+  style for the button generate sudoku button, which is the same style in board.html
+  */
   #generateSudoku {
     background-color: #007bff;
     color: white;
@@ -110,9 +128,15 @@ sudokuForm.addEventListener("submit", (event) => {
     cursor: pointer;
     transition: background-color 0.3s ease;
   }
+  /*
+  same style as the button in board.html
+  */
   #generateSudoku:hover {
     background-color: #0056b3;
   }
+  /*
+  display the error message if there is any
+  */
   #errorMessage {
     background-color: "#dc3545";
   }

@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for # import nesscessary functions
 from sudokuSolver import SudokuGenerator, SudokuSolveError # import the sudoku generator and the error type
+from typing import List
+
 
 '''
     flask backend to to stuff like rendering pages and validate the sudoku

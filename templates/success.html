@@ -6,6 +6,10 @@
     <title>Document</title>
   </head>
   <body>
+    <!--
+      congrats the player for reaching the end of the game 
+      with a button to go back to home
+    -->
     <h1>Congrats you've won the game</h1>
     <div id="goToHome">Go back to Home</div>
   </body>
@@ -21,6 +25,9 @@
 </script>
 
 <style>
+  /*
+  make the backgroujnd light grey and centered everything
+  */
   body {
     background-color: #f0f0f0;
     margin: 0;
@@ -30,9 +37,15 @@
     align-items: center;
     flex-direction: column;
   }
+  /*
+  change the style of the text to green to indicate wining
+  */
   h1 {
     color: #198754;
   }
+  /*
+  style for the button generate sudoku button, which is the same style in board.html
+  */
   #goToHome {
     border-radius: 5px;
     padding: 10px;
@@ -50,6 +63,9 @@
     transition: background-color 0.3s ease;
     user-select: none;
   }
+  /*
+  style for the button generate sudoku button, which is the same style in board.html
+  */
   #goToHome:hover {
     background-color: #0056b3;
   }

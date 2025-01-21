@@ -1,6 +1,5 @@
 from random import randint # for random number
 from copy import deepcopy # for making a deepcopy
-import array # for the array type 
 
 '''
     module for generating the sudoku
