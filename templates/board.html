@@ -120,7 +120,7 @@ function sudokuToString(sudoku) {
   let stringOutput = "["
   for (let i = 0; i < MAX_SDK_LEN; i++) {
     // get the string form of the current row using the array to string function
-    stringOutput += array[i];
+    stringOutput += arrayToString(sudoku[i]);
     stringOutput += ",";
   }
   // delete the worthless comma t the end of every string
