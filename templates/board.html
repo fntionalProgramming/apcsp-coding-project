@@ -146,7 +146,7 @@ SubmitBtn.addEventListener("click", () => {
       "Content-Type": "application/json",
     },
     // send to the backend the current board and the number of retries
-    body: `{"current_board": ${sudokuToString(sudoku)}, "retries": ${retries.toString()}}`,
+    body: JSON.stringify({current_board: sudokuToString(sudoku), retries: retries}),
   })
     // if the backend return a redirect which mean that the current user either won or lose the game redirect the user to that url
     // other wise if it is not a redirection we just get our data as json
