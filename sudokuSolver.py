@@ -208,7 +208,7 @@ class SudokuGenerator:
     def printBoard(self, board: list[list[str]]):
         for row in board:
             # print the board after a new end line
-            print(row + '\n')
+            print(row)
 
     
 
